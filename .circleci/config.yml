@@ -8,7 +8,7 @@ orbs:
 executors:
   main:
     docker:
-      - image: gru.ocir.io/grwidfxfmi4f/app-docker-image
+      - image: cimg/base:stable
         auth:
           username: $OCI_USER
           password: $OCI_PASS
