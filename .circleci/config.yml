@@ -22,12 +22,12 @@ jobs:
     steps:
       - checkout
       - setup_remote_docker
-      - docker/check
+      - docker/check:
+          registry: gru.ocir.io
       - docker/build:
           image: gru.ocir.io/grwidfxfmi4f/app-docker-image
           tag: 'teste1,teste2'
           extra_build_args: '--build-arg FOO=bar --build-arg BAZ=qux'
-          registry: gru.ocir.io
           path: ./php/
           dockerfile: Dockerfile.apache
           use-buildkit: true
