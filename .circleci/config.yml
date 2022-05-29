@@ -16,8 +16,6 @@ jobs:
       - checkout
       - setup_remote_docker
       - docker/install-docker-tools
-      - docker/check:
-          registry: gru.ocir.io
 
 # Invoke jobs via workflows
 # See: https://circleci.com/docs/2.0/configuration-reference/#workflows
@@ -32,6 +30,7 @@ workflows:
             name: docker/docker
           image: gru.ocir.io/grwidfxfmi4f/app-docker-image
           context: oci-registry
+          registry: gru.ocir.io
           tag: 'test1,test2'
           use-buildkit: true
           use-remote-docker: true
