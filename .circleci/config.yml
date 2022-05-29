@@ -18,8 +18,8 @@ jobs:
       - setup_remote_docker:
           docker_layer_caching: true
       - run:
-          name: Install Docker client
-          command: apk add docker-cli
+          name: test dokcer
+          command: docker ps
 
 # Invoke jobs via workflows
 # See: https://circleci.com/docs/2.0/configuration-reference/#workflows
