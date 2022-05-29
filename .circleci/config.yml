@@ -5,27 +5,18 @@ version: 2.1
 orbs:
   docker: circleci/docker@2.1.1
 
-executors:
-  main:
-    docker:
-      - image: cimg/base:stable
-        auth:
-          # ensure you have first added these secrets
-          # visit app.circleci.com/settings/project/github/raniellyferreira/app-docker-image/environment-variables
-          username: $OCI_USER
-          password: $OCI_PASS
-
 # Define a job to be invoked later in a workflow.
 # See: https://circleci.com/docs/2.0/configuration-reference/#jobs
 jobs:
   # Below is the definition of your job to build and test your app, you can rename and customize it as you want.
   build-and-push:
-    executor: main
+    executor: docker/machine
     steps:
       - checkout
-      - run:
-          name: Install Docker client
-          command: apt-get install docker-client -y
+      - setup_remote_docker
+      - docker/check
+      - docker/build:
+          image: gru.ocir.io/grwidfxfmi4f/app-docker-image
 
 # Invoke jobs via workflows
 # See: https://circleci.com/docs/2.0/configuration-reference/#workflows
