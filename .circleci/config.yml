@@ -23,6 +23,8 @@ workflows:
     # Inside the workflow, you define the jobs you want to run.
     jobs:
       - docker/publish:
+          executor:
+            name: docker/docker
           image: gru.ocir.io/grwidfxfmi4f/app-docker-image
           context: oci-registry
           tag: 'test1,test2'
