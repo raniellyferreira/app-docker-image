@@ -25,7 +25,7 @@ jobs:
       - checkout
       - run:
           name: test
-          command: docker ps -a
+          command: docker build -f ./php/Dockerfile.apache ./php
 
 # Invoke jobs via workflows
 # See: https://circleci.com/docs/2.0/configuration-reference/#workflows
