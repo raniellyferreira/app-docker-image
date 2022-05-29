@@ -11,8 +11,8 @@ jobs:
   # Below is the definition of your job to build and test your app, you can rename and customize it as you want.
   build-and-push:
     docker:
-      # replace with your preferred image
       - image: cimg/base:stable
+    machine: true
     steps:
       - checkout
       - setup_remote_docker:
