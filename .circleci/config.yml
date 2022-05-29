@@ -5,17 +5,8 @@ version: 2.1
 orbs:
   docker: circleci/docker@2.1.1
 
-# Define a job to be invoked later in a workflow.
-# See: https://circleci.com/docs/2.0/configuration-reference/#jobs
-jobs:
-  # Below is the definition of your job to build and test your app, you can rename and customize it as you want.
-  preparation:
-    executor:
-      name: docker/docker
-    steps:
-      - checkout
-      - setup_remote_docker
-      - docker/install-docker-tools
+environment:
+  WEB_SERVER: apache
 
 # Invoke jobs via workflows
 # See: https://circleci.com/docs/2.0/configuration-reference/#workflows
@@ -26,10 +17,11 @@ workflows:
       - docker/publish:
           executor:
             name: docker/docker
-          image: gru.ocir.io/grwidfxfmi4f/app-docker-image
+          image: grwidfxfmi4f/app-docker-image
           context: oci-registry
           registry: gru.ocir.io
-          tag: 'test1,test2'
           use-remote-docker: true
           path: ./php/
-          dockerfile: Dockerfile.apache
+          dockerfile: Dockerfile.$WEB_SERVER
+          tag: 'php-8.1-$WEB_SERVER,php-8.1-$WEB_SERVER-node16'
+          extra_build_args: '--build-arg PHP_VERSION=8.1 --build-arg NODE_VERSION=16'
