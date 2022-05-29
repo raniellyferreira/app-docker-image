@@ -5,18 +5,31 @@ version: 2.1
 orbs:
   docker: circleci/docker@2.1.1
 
+executors:
+  main:
+    docker:
+      - image: gru.ocir.io/grwidfxfmi4f/app-docker-image
+        auth:
+          username: $OCI_USER
+          password: $OCI_PASS
+
 # Define a job to be invoked later in a workflow.
 # See: https://circleci.com/docs/2.0/configuration-reference/#jobs
 jobs:
   # Below is the definition of your job to build and test your app, you can rename and customize it as you want.
   build-and-push:
-    executor: docker/machine
+    executor: main
     steps:
       - checkout
       - setup_remote_docker
       - docker/check
       - docker/build:
           image: gru.ocir.io/grwidfxfmi4f/app-docker-image
+          tag: 'teste1,teste2'
+          extra_build_args: '--build-arg FOO=bar --build-arg BAZ=qux'
+          registry: gru.ocir.io
+          path: ./php/
+          dockerfile: Dockerfile.apache
 
 # Invoke jobs via workflows
 # See: https://circleci.com/docs/2.0/configuration-reference/#workflows
