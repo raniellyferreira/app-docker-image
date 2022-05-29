@@ -22,6 +22,6 @@ workflows:
           registry: gru.ocir.io
           use-remote-docker: true
           path: ./php/
-          dockerfile: Dockerfile.$WEB_SERVER
-          tag: 'php-8.1-$WEB_SERVER,php-8.1-$WEB_SERVER-node16'
-          extra_build_args: '--build-arg PHP_VERSION=8.1 --build-arg NODE_VERSION=16'
+          dockerfile: "Dockerfile.$WEB_SERVER"
+          tag: "php-8.1-$WEB_SERVER,php-8.1-$WEB_SERVER-node16"
+          extra_build_args: "--build-arg PHP_VERSION=8.1 --build-arg NODE_VERSION=16"
