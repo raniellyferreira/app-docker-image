@@ -10,8 +10,8 @@ RUN set -ex; \
     sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf \
     && sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
 
-RUN set -xe \
-    && apt-get update \
+RUN set -xe; \
+    apt-get update \
     && apt-get install -y \
         unzip \
         curl \
@@ -106,7 +106,6 @@ RUN set -ex; \
         sockets \
         xmlrpc \
         xsl \
-        soap \
         mcrypt \
     ; \
     \
@@ -127,6 +126,8 @@ RUN set -ex; \
 ENV MAX_EXECUTION_TIME 60
 ENV MEMORY_LIMIT 128M
 ENV UPLOAD_LIMIT 2M
+ENV ALLOW_URL_FOPEN Off
+
 RUN set -ex; \
     \
     # Use the default production configuration
@@ -146,7 +147,7 @@ RUN set -ex; \
     } > $PHP_INI_DIR/conf.d/session-strict.ini; \
     \
     { \
-        echo 'allow_url_fopen=Off'; \
+        echo 'allow_url_fopen=${ALLOW_URL_FOPEN}'; \
         echo 'max_execution_time=${MAX_EXECUTION_TIME}'; \
         echo 'max_input_vars=10000'; \
         echo 'memory_limit=${MEMORY_LIMIT}'; \
@@ -177,8 +178,5 @@ RUN set -xe; \
 
 # Permissões
 RUN chown -R www-data:www-data /var/www/html
-
-# Criamos um usuário para rodar comandos artisan
-RUN adduser --disabled-password --shell /bin/bash --gecos "" artisan
 
 CMD ["apache2-foreground"]
