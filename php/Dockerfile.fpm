@@ -184,7 +184,4 @@ RUN set -ex; \
 # Permissões
 RUN chown -R www-data:www-data /var/www/html
 
-# Criamos um usuário para rodar comandos artisan
-RUN adduser --disabled-password --shell /bin/bash --gecos "" artisan
-
 CMD ["supervisord", "-c", "/etc/supervisor/supervisord.conf"]
