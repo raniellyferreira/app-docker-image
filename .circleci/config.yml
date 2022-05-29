@@ -32,7 +32,6 @@ workflows:
           context: oci-registry
           registry: gru.ocir.io
           tag: 'test1,test2'
-          use-buildkit: true
           use-remote-docker: true
           path: ./php/
           dockerfile: ./php/Dockerfile.apache
