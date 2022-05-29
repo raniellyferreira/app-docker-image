@@ -23,8 +23,6 @@ workflows:
   main: # This is the name of the workflow, feel free to change it to better match your workflow.
     # Inside the workflow, you define the jobs you want to run.
     jobs:
-      - preparation:
-          context: oci-registry
       - docker/publish:
           executor:
             name: docker/docker
@@ -34,4 +32,4 @@ workflows:
           tag: 'test1,test2'
           use-remote-docker: true
           path: ./php/
-          dockerfile: ./php/Dockerfile.apache
+          dockerfile: Dockerfile.apache
