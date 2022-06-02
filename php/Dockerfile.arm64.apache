@@ -1,0 +1,185 @@
+ARG PHP_VERSION=7.2
+
+FROM arm64v8/php:${PHP_VERSION}-apache
+
+ARG NODE_VERSION=12
+
+ENV APACHE_DOCUMENT_ROOT /var/www/html/public
+
+RUN set -ex; \
+    sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf \
+    && sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
+
+RUN set -xe; \
+    apt-get update \
+    && apt-get install -y \
+        unzip \
+        curl \
+        zip \
+        git \
+        supervisor
+
+# Instalador de dependencias do PHP
+RUN set -ex; \
+    curl -sSLf -o /usr/local/bin/install-php-extensions \
+        https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions \
+    && chmod +x /usr/local/bin/install-php-extensions
+
+# Instalação do composer
+RUN set -ex; \
+    curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+
+## Install Nodejs with nvm
+RUN set -xe; \
+    if [ "x${NODE_VERSION}" != "x" ]; then \
+        curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash && \
+        export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || printf %s "${XDG_CONFIG_HOME}/nvm")" && \
+        [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" && \
+        nvm install ${NODE_VERSION} && \
+        nvm alias default ${NODE_VERSION} && \
+        nvm use default ${NODE_VERSION}; \
+        ln -sf $NVM_DIR/versions/node/$(nvm version) $NVM_DIR/versions/node/v${NODE_VERSION}; \
+    fi
+
+ENV NODE_PATH /root/.nvm/versions/node/v${NODE_VERSION}/lib/node_modules
+ENV PATH      /root/.nvm/versions/node/v${NODE_VERSION}/bin:$PATH
+
+# xDebug install
+RUN set -ex; \
+    install-php-extensions xdebug \
+    && echo "xdebug.mode=debug" >> /usr/local/etc/php/conf.d/xdebug.ini \
+    && echo "xdebug.remote_autostart=off" >> /usr/local/etc/php/conf.d/xdebug.ini
+
+# Install dependencies
+RUN set -ex; \
+    \
+    savedAptMark="$(apt-mark showmanual)"; \
+    \
+    apt-get update; \
+    apt-get install -y --no-install-recommends \
+        libbz2-dev \
+        libfreetype6-dev \
+        libjpeg-dev \
+        libpng-dev \
+        libwebp-dev \
+        libxpm-dev \
+        libzip-dev \
+        libsodium-dev \
+        libmagickwand-dev \
+        libpq-dev \
+    ; \
+    \
+    ( \
+    docker-php-ext-configure gd \
+        --with-gd \
+        --with-xpm-dir=/usr/include \
+        --with-png-dir=/usr/include \
+        --with-webp-dir=/usr/include \
+        --with-jpeg-dir=/usr/include \
+        --with-freetype-dir=/usr/include || \
+    docker-php-ext-configure gd \
+        --with-xpm \
+        --with-webp \
+        --with-jpeg \
+        --with-freetype \
+    ); \
+    \
+    docker-php-ext-install -j "$(nproc)" \
+        bz2 \
+        gd \
+        mysqli \
+        opcache \
+        zip \
+        pdo \
+        pdo_mysql \
+        pgsql \
+        pdo_pgsql \
+        iconv \
+    ; \
+    \
+    install-php-extensions \
+        imagick \
+        calendar \
+        exif \
+        gettext \
+        pcntl \
+        shmop \
+        sockets \
+        xmlrpc \
+        xsl \
+        mcrypt \
+    ; \
+    \
+    apt-mark auto '.*' > /dev/null; \
+    apt-mark manual $savedAptMark; \
+    ldd "$(php -r 'echo ini_get("extension_dir");')"/*.so \
+        | awk '/=>/ { print $3 }' \
+        | sort -u \
+        | xargs -r dpkg-query -S \
+        | cut -d: -f1 \
+        | sort -u \
+        | xargs -rt apt-mark manual; \
+    \
+    apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false;
+
+# set recommended PHP.ini settings
+# see https://secure.php.net/manual/en/opcache.installation.php
+ENV MAX_EXECUTION_TIME 60
+ENV MEMORY_LIMIT 128M
+ENV UPLOAD_LIMIT 2M
+ENV ALLOW_URL_FOPEN Off
+
+RUN set -ex; \
+    \
+    # Use the default production configuration
+    mv -f "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"; \
+    \
+    { \
+        echo 'opcache.memory_consumption=128'; \
+        echo 'opcache.interned_strings_buffer=8'; \
+        echo 'opcache.max_accelerated_files=4000'; \
+        echo 'opcache.revalidate_freq=2'; \
+        echo 'opcache.fast_shutdown=1'; \
+    } > $PHP_INI_DIR/conf.d/opcache-recommended.ini; \
+    \
+    { \
+        echo 'session.cookie_httponly=1'; \
+        echo 'session.use_strict_mode=1'; \
+    } > $PHP_INI_DIR/conf.d/session-strict.ini; \
+    \
+    { \
+        echo 'allow_url_fopen=${ALLOW_URL_FOPEN}'; \
+        echo 'max_execution_time=${MAX_EXECUTION_TIME}'; \
+        echo 'max_input_vars=10000'; \
+        echo 'memory_limit=${MEMORY_LIMIT}'; \
+        echo 'post_max_size=${UPLOAD_LIMIT}'; \
+        echo 'upload_max_filesize=${UPLOAD_LIMIT}'; \
+    } > $PHP_INI_DIR/conf.d/custom-misc.ini; \
+    \
+    { \
+        echo 'display_errors=On'; \
+        echo 'log_errors=On'; \
+        echo 'display_startup_errors=On'; \
+    } > $PHP_INI_DIR/conf.d/logs.ini;
+
+RUN set -ex \
+    && a2enmod rewrite
+
+RUN rm -rf /var/lib/apt/lists/*
+
+WORKDIR /var/www/html
+
+# Composer config
+ENV COMPOSER_PROCESS_TIMEOUT 3600
+ENV COMPOSER_MEMORY_LIMIT -1
+
+RUN set -xe; \
+    composer config --global discard-changes true \
+    && echo "{}" > ~/.composer/composer.json
+
+# Permissões
+RUN chown -R www-data:www-data /var/www/html
+
+COPY apache/supervisor.basic.conf /etc/supervisor/supervisord.conf
+
+CMD ["supervisord", "-c", "/etc/supervisor/supervisord.conf"]
