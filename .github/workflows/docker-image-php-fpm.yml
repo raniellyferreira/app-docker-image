@@ -1,4 +1,4 @@
-name: Docker Image for fpm versions
+name: Docker Image for apache versions
 
 on:
   push:
@@ -12,7 +12,7 @@ env:
 
 jobs:
   build_and_push:
-    name: Build PHP docker image - FPM
+    name: Build docker image - Apache
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -34,8 +34,8 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v3
         env:
-          PHP_VERSION: 8.1
-          NODE_VERSION: 16
+          PHP_VERSION: "8.1"
+          NODE_VERSION: "16"
         with:
           push: true
           context: ./php/
@@ -51,8 +51,8 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v3
         env:
-          PHP_VERSION: 8.0
-          NODE_VERSION: 16
+          PHP_VERSION: "8.0"
+          NODE_VERSION: "16"
         with:
           push: true
           context: ./php/
@@ -68,8 +68,8 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v3
         env:
-          PHP_VERSION: 7.4
-          NODE_VERSION: 14
+          PHP_VERSION: "7.4"
+          NODE_VERSION: "14"
         with:
           push: true
           context: ./php/
@@ -85,8 +85,8 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v3
         env:
-          PHP_VERSION: 7.3
-          NODE_VERSION: 14
+          PHP_VERSION: "7.3"
+          NODE_VERSION: "14"
         with:
           push: true
           context: ./php/
@@ -102,8 +102,8 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v3
         env:
-          PHP_VERSION: 7.2
-          NODE_VERSION: 10
+          PHP_VERSION: "7.2"
+          NODE_VERSION: "10"
         with:
           push: true
           context: ./php/
@@ -119,8 +119,8 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v3
         env:
-          PHP_VERSION: 7.1
-          NODE_VERSION: 10
+          PHP_VERSION: "7.1"
+          NODE_VERSION: "10"
         with:
           push: true
           context: ./php/
@@ -136,8 +136,8 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v3
         env:
-          PHP_VERSION: 7.0
-          NODE_VERSION: 10
+          PHP_VERSION: "7.0"
+          NODE_VERSION: "10"
         with:
           push: true
           context: ./php/
@@ -153,8 +153,8 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v3
         env:
-          PHP_VERSION: 5.6
-          NODE_VERSION: 8
+          PHP_VERSION: "5.6"
+          NODE_VERSION: "8"
         with:
           push: true
           context: ./php/
