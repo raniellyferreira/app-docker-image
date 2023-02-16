@@ -16,19 +16,17 @@ const options = fs.readFileSync('versions.txt', {
     .filter(l => l != null && l.trim() != "" && !l.startsWith('//'))
     .map(line => line.trim().split(" "))
     .reduce((prev, curr) => [...prev, {
-        arch: curr[0],
-        tec: curr[1],
-        server: curr[2],
-        phpVersion: curr[3],
-        nodeVersion: curr[4],
-        repo: curr[5],
+        tec: curr[0],
+        server: curr[1],
+        phpVersion: curr[2],
+        repo: curr[3],
     }], []);
 
 options
     .forEach(op => {
         let temp = template;
         Object.keys(op).forEach(k => temp = temp.replace(new RegExp(`!!${k}!!`, 'g'), op[k]));
-        fs.writeFileSync(`.github/workflows/${op.arch}-${op.tec}${op.phpVersion}-${op.server}-node${op.nodeVersion}.yml`, temp);
+        fs.writeFileSync(`.github/workflows/${op.tec}${op.phpVersion}-${op.server}.yml`, temp);
     });
 
 exec('git add .github/workflows/*.yml');

@@ -1,4 +1,4 @@
-name: Build !!server!!/php!!phpVersion!! docker image version
+name: Build fpm/php7.3 docker image version
 
 on:
   push:
@@ -7,9 +7,9 @@ on:
     branches: [ master ]
 
 env:
-  IMAGE_REPOSITORY: gru.ocir.io/grwidfxfmi4f/!!repo!!
-  WEB_SERVER: !!server!!
-  PHP_VERSION: "!!phpVersion!!"
+  IMAGE_REPOSITORY: gru.ocir.io/grwidfxfmi4f/app-docker-image
+  WEB_SERVER: fpm
+  PHP_VERSION: "7.3"
 
 concurrency: 
   group: ${{ github.workflow }}-${{ github.ref }}
