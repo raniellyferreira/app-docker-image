@@ -90,8 +90,10 @@ RUN set -ex; \
         sockets \
         xmlrpc \
         xsl \
-        mcrypt \
     ; \
+    \
+    # Optional extensions
+    install-php-extensions mcrypt || true ; \
     \
     apt-mark auto '.*' > /dev/null; \
     apt-mark manual $savedAptMark; \

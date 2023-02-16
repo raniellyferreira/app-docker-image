@@ -1,3 +1,4 @@
+php apache 8.2.0 app-docker-image
 php apache 8.2 app-docker-image
 php apache 8.1 app-docker-image
 php apache 8.0 app-docker-image
@@ -7,6 +8,7 @@ php apache 7.2 app-docker-image
 php apache 7.1 app-docker-image
 php apache 7.0 app-docker-image
 php apache 5.6 app-docker-image
+php fpm 8.2.0 app-docker-image
 php fpm 8.2 app-docker-image
 php fpm 8.1 app-docker-image
 php fpm 8.0 app-docker-image
@@ -16,6 +18,7 @@ php fpm 7.2 app-docker-image
 php fpm 7.1 app-docker-image
 php fpm 7.0 app-docker-image
 php fpm 5.6 app-docker-image
+php fpm-alpine 8.2.0 app-docker-image
 php fpm-alpine 8.2 app-docker-image
 php fpm-alpine 8.1 app-docker-image
 php fpm-alpine 8.0 app-docker-image
