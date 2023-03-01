@@ -17,7 +17,7 @@ concurrency:
 
 jobs:
   build_and_push:
-    name: Build docker image - Apache
+    name: Build docker image - apache
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
