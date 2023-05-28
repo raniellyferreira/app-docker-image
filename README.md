@@ -3,13 +3,13 @@
 ## PHP Apache Image
 
 ```Text
-gru.ocir.io/grwidfxfmi4f/app-docker-image:php-8.1-apache
+gru.ocir.io/grwidfxfmi4f/app-docker-image:php-8.2-apache
 ```
 
 Exemplo Dockerfile para o projeto
 
 ```Dockerfile
-FROM gru.ocir.io/grwidfxfmi4f/app-docker-image:php-8.1-apache
+FROM gru.ocir.io/grwidfxfmi4f/app-docker-image:php-8.2-apache
 
 # Configurações adicionais aqui
 # Instalação de dependencias do PHP aqui
@@ -25,11 +25,11 @@ RUN composer install -o -vvv --prefer-dist --no-interaction --no-progress --no-s
 ## PHP FPM/Nginx Images
 
 ```Text
-gru.ocir.io/grwidfxfmi4f/app-docker-image:php-8.1-fpm
+gru.ocir.io/grwidfxfmi4f/app-docker-image:php-8.2-fpm
 ```
 
 ```Dockerfile
-FROM gru.ocir.io/grwidfxfmi4f/app-docker-image:php-8.1-fpm
+FROM gru.ocir.io/grwidfxfmi4f/app-docker-image:php-8.2-fpm
 
 # Configurações adicionais aqui
 # Instalação de dependencias do PHP aqui
