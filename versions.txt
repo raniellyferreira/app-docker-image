@@ -1,3 +1,7 @@
+php apache 8.2.4 app-docker-image
+php apache 8.2.3 app-docker-image
+php apache 8.2.2 app-docker-image
+php apache 8.2.1 app-docker-image
 php apache 8.2.0 app-docker-image
 php apache 8.2 app-docker-image
 php apache 8.1 app-docker-image
