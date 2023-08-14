@@ -50,24 +50,10 @@ RUN set -ex; \
         libsodium-dev \
         libmagickwand-dev \
         libpq-dev \
+        libicu-dev \
     ; \
     \
-    ( \
-    docker-php-ext-configure gd \
-        --with-gd \
-        --with-xpm-dir=/usr/include \
-        --with-png-dir=/usr/include \
-        --with-webp-dir=/usr/include \
-        --with-jpeg-dir=/usr/include \
-        --with-freetype-dir=/usr/include || \
-    docker-php-ext-configure gd \
-        --with-xpm \
-        --with-webp \
-        --with-jpeg \
-        --with-freetype \
-    ); \
-    \
-    docker-php-ext-install -j "$(nproc)" \
+    install-php-extensions \
         bz2 \
         gd \
         mysqli \
@@ -78,9 +64,8 @@ RUN set -ex; \
         pgsql \
         pdo_pgsql \
         iconv \
-    ; \
-    \
-    install-php-extensions \
+        intl \
+        bcmath \
         imagick \
         calendar \
         exif \
@@ -94,18 +79,27 @@ RUN set -ex; \
     \
     # Optional extensions
     install-php-extensions mcrypt || true ; \
-    \
-    apt-mark auto '.*' > /dev/null; \
-    apt-mark manual $savedAptMark; \
-    ldd "$(php -r 'echo ini_get("extension_dir");')"/*.so \
-        | awk '/=>/ { print $3 }' \
-        | sort -u \
-        | xargs -r dpkg-query -S \
-        | cut -d: -f1 \
-        | sort -u \
-        | xargs -rt apt-mark manual; \
-    \
-    apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false;
+	\
+	extDir="$(php -r 'echo ini_get("extension_dir");')"; \
+	[ -d "$extDir" ]; \
+# reset apt-mark's "manual" list so that "purge --auto-remove" will remove all build dependencies
+	apt-mark auto '.*' > /dev/null; \
+	apt-mark manual $savedAptMark; \
+	ldd "$extDir"/*.so \
+		| awk '/=>/ { so = $(NF-1); if (index(so, "/usr/local/") == 1) { next }; gsub("^/(usr/)?", "", so); print so }' \
+		| sort -u \
+		| xargs -r dpkg-query --search \
+		| cut -d: -f1 \
+		| sort -u \
+		| xargs -rt apt-mark manual; \
+	\
+	apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false; \
+	rm -rf /var/lib/apt/lists/*; \
+	\
+	! { ldd "$extDir"/*.so | grep 'not found'; }; \
+# check for output like "PHP Warning:  PHP Startup: Unable to load dynamic library 'foo' (tried: ...)
+	err="$(php --version 3>&1 1>&2 2>&3)"; \
+	[ -z "$err" ]
 
 # set recommended PHP.ini settings
 # see https://secure.php.net/manual/en/opcache.installation.php
