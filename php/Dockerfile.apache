@@ -1,4 +1,4 @@
-ARG PHP_VERSION=7.2
+ARG PHP_VERSION=8.3
 
 FROM php:${PHP_VERSION}-apache
 
@@ -67,7 +67,6 @@ RUN set -ex; \
         iconv \
         intl \
         bcmath \
-        imagick \
         calendar \
         exif \
         gettext \
@@ -79,28 +78,26 @@ RUN set -ex; \
     ; \
     \
     # Optional extensions
-    install-php-extensions mcrypt || true ; \
+    install-php-extensions mcrypt || : ; \
+    install-php-extensions imagick || : ; \
 	\
-	extDir="$(php -r 'echo ini_get("extension_dir");')"; \
-	[ -d "$extDir" ]; \
-# reset apt-mark's "manual" list so that "purge --auto-remove" will remove all build dependencies
 	apt-mark auto '.*' > /dev/null; \
-	apt-mark manual $savedAptMark; \
-	ldd "$extDir"/*.so \
-		| awk '/=>/ { so = $(NF-1); if (index(so, "/usr/local/") == 1) { next }; gsub("^/(usr/)?", "", so); print so }' \
-		| sort -u \
-		| xargs -r dpkg-query --search \
-		| cut -d: -f1 \
-		| sort -u \
-		| xargs -rt apt-mark manual; \
-	\
-	apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false; \
-	rm -rf /var/lib/apt/lists/*; \
-	\
-	! { ldd "$extDir"/*.so | grep 'not found'; }; \
-# check for output like "PHP Warning:  PHP Startup: Unable to load dynamic library 'foo' (tried: ...)
-	err="$(php --version 3>&1 1>&2 2>&3)"; \
-	[ -z "$err" ]
+    apt-mark manual $savedAptMark; \
+    extdir="$(php -r 'echo ini_get("extension_dir");')"; \
+    ldd "$extdir"/*.so \
+        | awk '/=>/ { so = $(NF-1); if (index(so, "/usr/local/") == 1) { next }; gsub("^/(usr/)?", "", so); print so }' \
+        | sort -u \
+        | xargs -r dpkg-query -S \
+        | cut -d: -f1 \
+        | sort -u \
+        | xargs -rt apt-mark manual; \
+    \
+    apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false; \
+    rm -rf /var/lib/apt/lists/*; \
+    ldd "$extdir"/*.so | grep -qzv "=> not found" || (echo "Sanity check failed: missing libraries:"; ldd "$extdir"/*.so | grep " => not found"; exit 1); \
+    ldd "$extdir"/*.so | grep -q "libzip.so.* => .*/libzip.so.*" || (echo "Sanity check failed: libzip.so is not referenced"; ldd "$extdir"/*.so; exit 1); \
+    err="$(php --version 3>&1 1>&2 2>&3)"; \
+    [ -z "$err" ] || (echo "Sanity check failed: php returned errors; $err"; exit 1;);
 
 # set recommended PHP.ini settings
 # see https://secure.php.net/manual/en/opcache.installation.php
@@ -108,6 +105,8 @@ ENV MAX_EXECUTION_TIME 60
 ENV MEMORY_LIMIT 128M
 ENV UPLOAD_LIMIT 2M
 ENV ALLOW_URL_FOPEN Off
+ENV TZ UTC
+ENV SESSION_SAVE_PATH /sessions
 
 RUN set -ex; \
     \
@@ -134,6 +133,8 @@ RUN set -ex; \
         echo 'memory_limit=${MEMORY_LIMIT}'; \
         echo 'post_max_size=${UPLOAD_LIMIT}'; \
         echo 'upload_max_filesize=${UPLOAD_LIMIT}'; \
+        echo 'date.timezone=${TZ}'; \
+        echo 'session.save_path=${SESSION_SAVE_PATH}'; \
     } > $PHP_INI_DIR/conf.d/custom-misc.ini; \
     \
     { \

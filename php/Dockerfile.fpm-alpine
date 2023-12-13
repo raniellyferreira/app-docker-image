@@ -1,4 +1,4 @@
-ARG PHP_VERSION=7.2
+ARG PHP_VERSION=8.3
 
 FROM php:${PHP_VERSION}-fpm-alpine
 
@@ -40,6 +40,7 @@ RUN set -ex; \
         libzip-dev \
         libsodium-dev \
         postgresql-dev \
+        libxpm-dev \
     ; \
     \
     install-php-extensions \
@@ -55,7 +56,6 @@ RUN set -ex; \
         iconv \
         intl \
         bcmath \
-        imagick \
         calendar \
         exif \
         gettext \
@@ -67,23 +67,17 @@ RUN set -ex; \
     ; \
     \
     # Optional extensions
-    install-php-extensions mcrypt || true ; \
+    install-php-extensions mcrypt || : ; \
+    install-php-extensions imagick || : ; \
     \
-    extDir="$(php -r 'echo ini_get("extension_dir");')"; \
-	[ -d "$extDir" ]; \
-	runDeps="$( \
-		scanelf --needed --nobanner --format '%n#p' --recursive "$extDir" \
-			| tr ',' '\n' \
-			| sort -u \
-			| awk 'system("[ -e /usr/local/lib/" $1 " ]") == 0 { next } { print "so:" $1 }' \
-	)"; \
-	apk add --no-network --virtual .runtime-rundeps $runDeps; \
-	apk del --no-network .build-deps; \
-	\
-	! { ldd "$extDir"/*.so | grep 'not found'; }; \
-# check for output like "PHP Warning:  PHP Startup: Unable to load dynamic library 'foo' (tried: ...)
-	err="$(php --version 3>&1 1>&2 2>&3)"; \
-	[ -z "$err" ]
+    runDeps="$( \
+        scanelf --needed --nobanner --format '%n#p' --recursive /usr/local/lib/php/extensions \
+            | tr ',' '\n' \
+            | sort -u \
+            | awk 'system("[ -e /usr/local/lib/" $1 " ]") == 0 { next } { print "so:" $1 }' \
+    )"; \
+    apk add --no-network --virtual .phpexts-rundeps $runDeps; \
+    apk del --no-network .build-deps
 
 # set recommended PHP.ini settings
 # see https://secure.php.net/manual/en/opcache.installation.php
@@ -91,6 +85,8 @@ ENV MAX_EXECUTION_TIME 60
 ENV MEMORY_LIMIT 128M
 ENV UPLOAD_LIMIT 2M
 ENV ALLOW_URL_FOPEN Off
+ENV TZ UTC
+ENV SESSION_SAVE_PATH /sessions
 
 RUN set -ex; \
     \
@@ -117,6 +113,8 @@ RUN set -ex; \
         echo 'memory_limit=${MEMORY_LIMIT}'; \
         echo 'post_max_size=${UPLOAD_LIMIT}'; \
         echo 'upload_max_filesize=${UPLOAD_LIMIT}'; \
+        echo 'date.timezone=${TZ}'; \
+        echo 'session.save_path=${SESSION_SAVE_PATH}'; \
     } > $PHP_INI_DIR/conf.d/custom-misc.ini; \
     \
     { \
