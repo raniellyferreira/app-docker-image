@@ -21,10 +21,12 @@ RUN set -ex; \
 RUN set -ex; \
     curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
-# Install xdebug
+# xDebug install
+ENV XDEBUG_MODE debug
+
 RUN set -ex; \
     install-php-extensions xdebug \
-    && echo "xdebug.mode=debug" >> /usr/local/etc/php/conf.d/xdebug.ini \
+    && echo "xdebug.mode=${XDEBUG_MODE}" >> /usr/local/etc/php/conf.d/xdebug.ini \
     && echo "xdebug.remote_autostart=off" >> /usr/local/etc/php/conf.d/xdebug.ini
 
 # Install dependencies
@@ -134,8 +136,13 @@ ENV COMPOSER_PROCESS_TIMEOUT 3600
 ENV COMPOSER_MEMORY_LIMIT -1
 
 RUN set -xe; \
+    \
     composer config --global discard-changes true \
-    && echo "{}" > ~/.composer/composer.json
+    && echo "{}" > ~/.composer/composer.json \
+    ; \
+    mkdir $SESSION_SAVE_PATH; \
+    chmod 1777 $SESSION_SAVE_PATH; \
+    chown www-data:www-data $SESSION_SAVE_PATH
 
 COPY fpm/nginx.conf /etc/nginx/nginx.conf
 COPY fpm/nginx.default.conf /etc/nginx/sites-available/default
