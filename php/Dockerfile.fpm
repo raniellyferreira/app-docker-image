@@ -98,6 +98,8 @@ RUN set -ex; \
     [ -z "$err" ] || (echo "Sanity check failed: php returned errors; $err"; exit 1;);
 
 # set recommended PHP.ini settings
+ENV DISPLAY_ERRORS On
+ENV ERROR_REPORTING "E_ALL & ~E_DEPRECATED & ~E_STRICT"
 ENV MAX_EXECUTION_TIME 60
 ENV MEMORY_LIMIT 128M
 ENV UPLOAD_LIMIT 2M
@@ -151,13 +153,14 @@ RUN set -ex; \
     } > $PHP_INI_DIR/conf.d/custom-misc.ini; \
     \
     { \
-        echo 'display_errors=On'; \
+        echo 'display_errors=${DISPLAY_ERRORS}'; \
         echo 'display_startup_errors=On'; \
         echo 'log_errors=On'; \
         echo 'error_log=/dev/stderr'; \
 		echo 'ignore_repeated_errors=On'; \
 		echo 'ignore_repeated_source=Off'; \
 		echo 'html_errors=Off'; \
+        echo 'error_reporting=${ERROR_REPORTING}'; \
     } > $PHP_INI_DIR/conf.d/logs.ini;
 
 RUN rm -rf /var/lib/apt/lists/*
